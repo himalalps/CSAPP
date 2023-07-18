@@ -256,7 +256,29 @@ int logicalNeg(int x) {
  *  Max ops: 90
  *  Rating: 4
  */
-int howManyBits(int x) { return 0; }
+int howManyBits(int x) {
+    // 1. compute the absolute value of x
+    // x >> 31 = 0xffffffff if x < 0, x ^ 0xffffffff = ~x
+    // 2. half-divide and conquer
+    // if higher half is not 0, then next step focuses on higher, else lower
+    //
+    // !!!!! As negtive number is considered as 1 bit less than positive number,
+    // the absolute value need not add 1
+    int abs = (x ^ (x >> 31));
+    int bit_16, bit_8, bit_4, bit_2, bit_1, bit_0;
+    bit_16 = !!(abs >> 16) << 4;
+    abs = abs >> bit_16;
+    bit_8 = !!(abs >> 8) << 3;
+    abs = abs >> bit_8;
+    bit_4 = !!(abs >> 4) << 2;
+    abs = abs >> bit_4;
+    bit_2 = !!(abs >> 2) << 1;
+    abs = abs >> bit_2;
+    bit_1 = !!(abs >> 1);
+    abs = abs >> bit_1;
+    bit_0 = abs;
+    return bit_16 + bit_8 + bit_4 + bit_2 + bit_1 + bit_0 + 1;
+}
 // float
 /*
  * floatScale2 - Return bit-level equivalent of expression 2*f for
