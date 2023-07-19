@@ -178,7 +178,7 @@ int isTmax(int x) {
  */
 int allOddBits(int x) {
     // temp = 0xAAAAAAAA
-    int temp = (0xAA << 24) + (0xAA << 16) + (0xAA << 8) + 0xAA;
+    int temp = (0xaa << 24) + (0xaa << 16) + (0xaa << 8) + 0xaa;
     return !((x & temp) ^ temp);
 }
 /*
@@ -292,11 +292,17 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-    int power = (uf >> 23) & 0xff;
-    if (power == 0xff || uf == 0) {
+    // first get exp
+    // if exp == 0xff, uf is NaN or infinity, return uf
+    // if uf is 0, return uf
+    // if exp != 0, exp + 1
+    // if exp == 0, shift left 1 bit, keep sign bit
+    // for 0x80000000, it is -0, still return 0x80000000
+    int exp = (uf >> 23) & 0xff;
+    if (exp == 0xff || uf == 0) {
         return uf;
-    } else if (power) {
-        return (uf & 0x807fffff) | ((power + 1) << 23);
+    } else if (exp) {
+        return (uf & 0x807fffff) | ((exp + 1) << 23);
     } else {
         return (uf & 0x80000000) | (uf << 1);
     }
@@ -313,7 +319,31 @@ unsigned floatScale2(unsigned uf) {
  *   Max ops: 30
  *   Rating: 4
  */
-int floatFloat2Int(unsigned uf) { return 2; }
+int floatFloat2Int(unsigned uf) {
+    // first get exp
+    // if exp >= 31, out of bound
+    // if exp < 0, then uf < 1, return 0
+    // else, get frac, use shift to get absolute value
+    // use sign bit to determine if it is negative
+    int exp = ((uf >> 23) & 0xff) - 127;
+    if (exp >= 31) {
+        return 0x80000000;
+    } else if (exp < 0) {
+        return 0;
+    } else {
+        int frac = (uf & 0x7fffff) | 0x800000;
+        if (exp > 23) {
+            frac = frac << (exp - 23);
+        } else {
+            frac = frac >> (23 - exp);
+        }
+        if (uf >> 31) {
+            return ~frac + 1;
+        } else {
+            return frac;
+        }
+    }
+}
 /*
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
  *   (2.0 raised to the power x) for any 32-bit integer x.
@@ -327,4 +357,18 @@ int floatFloat2Int(unsigned uf) { return 2; }
  *   Max ops: 30
  *   Rating: 4
  */
-unsigned floatPower2(int x) { return 2; }
+unsigned floatPower2(int x) {
+    // -126 <= x <= 127, 1 <= exp(x + 127) <= 254, normalized
+    // -149 <= x <= -127, 2^-149 <= 2^x <= 2^-127, denormalized
+    // x < -149, too small
+    // x > 127, too large
+    if (x > -127 && x < 128) {
+        return (x + 127) << 23;
+    } else if (x > -150 && x < -126) {
+        return 1 << (x + 149);
+    } else if (x < -149) {
+        return 0;
+    } else {
+        return 0xff << 23;
+    }
+}
