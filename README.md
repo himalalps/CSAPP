@@ -4,4 +4,4 @@ Related resources are all from [the website](http://csapp.cs.cmu.edu/3e/home.htm
 
 ## completion order
 
-1. Data lab
+1. Data lab (4.5h)
