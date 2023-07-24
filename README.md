@@ -8,4 +8,4 @@ Note that detailed lab descriptions can be found at [this page](http://csapp.cs.
 
 1. Data lab (4.5h)
 2. Bomb lab (7h)
-3. Attack lab
+3. Attack lab (8h)
