@@ -1,3 +1,5 @@
 *.tar
 code/
 *.pdf
+*.o
+*.exe

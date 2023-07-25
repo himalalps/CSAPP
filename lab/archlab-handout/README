@@ -20,3 +20,36 @@ README			This file
 archlab.{ps,pdf}	Lab writeup
 sim.tar			Archive of the Y86-64 tools in tar format
 simguide.{ps,pdf}	CS:APP Guide to Simulators document	
+
+---
+
+# Initilization
+
+There are some errors now when setting up. For my case, 
+change the following three Makefile files makes it work.
+
+```makefile
+# sim/Makefile
+...
+# GUIMODE=-DHAS_GUI
+...
+# TKLIBS=-L/usr/lib -ltk -ltcl
+...
+# TKINC=-isystem /usr/include/tcl8.5
+...
+```
+
+```makefile
+# sim/misc/Makefile
+...
+CFLAGS=-Wall -O1 -g -fcommon
+LCFLAGS=-O1 -fcommon
+...
+```
+
+```makefile
+# sim/pipe/Makefile
+...
+CFLAGS=-Wall -O2 -fcommon
+...
+```

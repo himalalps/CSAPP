@@ -26,3 +26,12 @@ can compile (use flag -Og) and disassemble it to look for gadgets.
 Utility program to generate byte sequences.  See documentation in lab
 handout.
 
+---
+
+tips:
+
+1. The binary files `ctarget` and `rtarget` need to be executed with 
+flag `-q`, otherwise they will report errors.
+
+2. `ctarget` can only be input by flag `-i [file]`, otherwise it will 
+report SEGMENTATION FAULT.
