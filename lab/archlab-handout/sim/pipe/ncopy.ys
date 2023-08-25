@@ -16,23 +16,120 @@ ncopy:
 ##################################################################
 # You can modify this portion
 	# Loop header
-	xorq %rax,%rax		# count = 0;
-	andq %rdx,%rdx		# len <= 0?
-	jle Done		# if so, goto Done:
+	xorq %rax, %rax		# count = 0;
+    iaddq $-6, %rdx		# length < 6? 
+	jl end				# if so, goto end:
 
-Loop:	mrmovq (%rdi), %r10	# read val from src...
-	rmmovq %r10, (%rsi)	# ...and store it to dst
-	andq %r10, %r10		# val <= 0?
-	jle Npos		# if so, goto Npos:
-	irmovq $1, %r10
-	addq %r10, %rax		# count++
-Npos:	irmovq $1, %r10
-	subq %r10, %rdx		# len--
-	irmovq $8, %r10
-	addq %r10, %rdi		# src++
-	addq %r10, %rsi		# dst++
-	andq %rdx,%rdx		# len > 0?
-	jg Loop			# if so, goto Loop:
+Loop:
+# read val from src...
+    mrmovq (%rdi),   %rcx	
+    mrmovq 8(%rdi),  %r8
+    mrmovq 16(%rdi), %r9
+    mrmovq 24(%rdi), %r10
+    mrmovq 32(%rdi), %r11
+    mrmovq 40(%rdi), %r12   
+
+# ...and store it to dst
+    rmmovq %rcx, (%rsi)
+    rmmovq %r8, 8(%rsi)
+    rmmovq %r9, 16(%rsi)
+    rmmovq %r10, 24(%rsi)
+    rmmovq %r11, 32(%rsi)
+    rmmovq %r12, 40(%rsi)
+
+    andq %rcx, %rcx
+	jle notInc1
+	iaddq $1, %rax
+
+notInc1:
+    andq %r8, %r8
+	jle notInc2
+	iaddq $1, %rax
+
+notInc2:
+    andq %r9, %r9
+	jle notInc3
+	iaddq $1, %rax
+
+notInc3:
+    andq %r10, %r10
+	jle notInc4
+	iaddq $1, %rax
+
+notInc4:
+    andq %r11, %r11
+	jle notInc5
+	iaddq $1, %rax
+
+notInc5:
+    andq %r12, %r12
+	jle notInc6
+	iaddq $1, %rax
+
+notInc6:
+    andq %r13,%r13
+	
+	iaddq $48, %rdi		# src += 6
+	iaddq $48, %rsi		# dst += 6
+	iaddq $-6, %rdx		# len -= 6 
+	jge Loop			# if len >= 0, goto Loop:
+
+end:
+    iaddq $6, %rdx
+    jle Done
+
+    mrmovq (%rdi), %rcx
+    rmmovq %rcx, (%rsi)
+    andq %rcx, %rcx
+	jle notIncx9
+	iaddq $1, %rax
+
+notIncx9:
+    iaddq $-1, %rdx
+    jle Done
+
+    mrmovq 8(%rdi), %r8
+    rmmovq %r8, 8(%rsi)
+    andq %r8, %r8
+	jle notIncx10
+	iaddq $1, %rax
+
+notIncx10:
+    iaddq $-1,%rdx
+    jle Done
+
+    mrmovq 16(%rdi), %r9
+    rmmovq %r9, 16(%rsi)
+    andq %r9, %r9
+	jle notIncx11
+	iaddq $1, %rax
+
+notIncx11:
+    iaddq $-1,%rdx
+    jle Done
+
+    mrmovq 24(%rdi), %r10
+    rmmovq %r10, 24(%rsi)
+    andq %r10, %r10
+	jle notIncx12
+	iaddq $1, %rax
+
+notIncx12:
+    iaddq $-1,%rdx
+    jle Done
+    
+	mrmovq 32(%rdi), %rcx	
+    rmmovq %rcx, 32(%rsi)
+    andq %rcx, %rcx
+    jle notIncx13
+    iaddq $1, %rax
+
+notIncx13:
+    iaddq $-1,%rdx
+    je Done
+    mrmovq 40(%rdi), %rcx	
+    rmmovq %rcx, 40(%rsi)
+    andq %rcx, %rcx
 ##################################################################
 # Do not modify the following section of code
 # Function epilogue.
