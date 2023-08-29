@@ -50,3 +50,9 @@ To get a list of the driver flags:
 
 	unix> mdriver -h
 
+*******************
+Missing trace files
+*******************
+The tar file downloaded from the official website does not contain
+the necessary trace files for the lab. I have included them in the
+Release.
