@@ -35,6 +35,8 @@ team_t team = {
     "",
 };
 
+#define NEXT_FIT
+
 /* single word or double word alignment */
 #define WSIZE 4
 #define DSIZE 8
@@ -73,6 +75,10 @@ team_t team = {
 
 void *heap_listp;
 
+#ifdef NEXT_FIT
+void *pre_listp;
+#endif
+
 static void *coalesce(void *bp);
 static void *extend_heap(size_t size);
 static void *find_fit(size_t asize);
@@ -93,6 +99,9 @@ int mm_init(void) {
     if (extend_heap(CHUNKSIZE) == NULL) {
         return -1;
     }
+#ifdef NEXT_FIT
+    pre_listp = heap_listp;
+#endif
     return 0;
 }
 
@@ -121,6 +130,9 @@ void *mm_malloc(size_t size) {
         return NULL;
     }
     place(bp, asize);
+#ifdef NEXT_FIT
+    pre_listp = bp;
+#endif
     return bp;
 }
 
@@ -135,7 +147,11 @@ void mm_free(void *ptr) {
     size_t prev_alloc = GET_PREV_ALLOC(HDRP(ptr));
     PUT(HDRP(ptr), PACK_PREV(size, 0, prev_alloc));
     PUT(FTRP(ptr), PACK_PREV(size, 0, prev_alloc));
+#ifdef NEXT_FIT
+    pre_listp = coalesce(ptr);
+#else
     coalesce(ptr);
+#endif
     return;
 }
 
@@ -244,6 +260,23 @@ static void *coalesce(void *bp) {
  *              using first fit search
  */
 static void *find_fit(size_t asize) {
+#ifdef NEXT_FIT
+    void *bp = pre_listp;
+    while (GET_SIZE(HDRP(bp))) {
+        if (!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp)))) {
+            return bp;
+        }
+        bp = NEXT_BLKP(bp);
+    }
+    bp = heap_listp;
+    while (bp != pre_listp && GET(HDRP(bp))) {
+        if (!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp)))) {
+            return bp;
+        }
+        bp = NEXT_BLKP(bp);
+    }
+    return NULL;
+#else
     void *bp = NEXT_BLKP(heap_listp);
 
     while (GET_SIZE(HDRP(bp))) {
@@ -254,6 +287,7 @@ static void *find_fit(size_t asize) {
     }
 
     return NULL;
+#endif
 }
 
 /**
@@ -279,4 +313,5 @@ static void place(void *bp, size_t asize) {
             PUT(FTRP(NEXT_BLKP(bp)), PACK_PREV(csize, prev_alloc, 1));
         }
     }
+    return;
 }
