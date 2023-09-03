@@ -1,8 +1,12 @@
 #include "csapp.h"
+#include "sbuf.h"
 
 /* Recommended max cache and object sizes */
 #define MAX_CACHE_SIZE 1049000
 #define MAX_OBJECT_SIZE 102400
+
+#define NTHREADS 32
+#define SBUFSIZE 128
 
 /* You won't lose style points for including this long line in your code */
 static const char *user_agent_hdr =
@@ -18,12 +22,15 @@ void clienterror(int fd, char *cause, char *errnum, char *shortmsg,
 void send_requesthdrs(int connfd, char *method, char *path, char *hostPort,
                       rio_t rio);
 void read_response(int connfd, int fd);
+void *thread(void *vargp);
+
+sbuf_t sbuf;
 
 int main(int argc, char **argv) {
     int listenfd, connfd;
-    char hostname[MAXLINE], port[MAXLINE];
     socklen_t clientlen;
     struct sockaddr_storage clientaddr;
+    pthread_t tid;
 
     /* Check command line args */
     if (argc != 2) {
@@ -36,18 +43,28 @@ int main(int argc, char **argv) {
     }
 
     listenfd = Open_listenfd(argv[1]);
+
+    sbuf_init(&sbuf, SBUFSIZE);
+    for (int i = 0; i < NTHREADS; i++) {
+        Pthread_create(&tid, NULL, thread, NULL);
+    }
+
     while (1) {
         clientlen = sizeof(clientaddr);
         connfd = Accept(listenfd, (SA *)&clientaddr,
                         &clientlen); // line:netp:tiny:accept
-        Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port,
-                    MAXLINE, 0);
-        printf("Accepted connection from (%s, %s)\n", hostname, port);
+        sbuf_insert(&sbuf, connfd);
+    }
+    return 0;
+}
+
+void *thread(void *vargp) {
+    Pthread_detach(pthread_self());
+    while (1) {
+        int connfd = sbuf_remove(&sbuf);
         doit(connfd);  // line:netp:tiny:doit
         Close(connfd); // line:netp:tiny:close
     }
-    printf("%s", user_agent_hdr);
-    return 0;
 }
 
 void doit(int fd) {

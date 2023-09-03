@@ -47,3 +47,8 @@ nop-server.py
 tiny
     Tiny Web server from the CS:APP text
 
+############
+Important!!!
+############
+The original `driver.sh` file has a problem in line 301, which should
+start with `python3`.
