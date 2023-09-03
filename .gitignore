@@ -4,3 +4,5 @@ code/
 *.o
 *.exe
 .vscode/
+.proxy/
+.noproxy/
